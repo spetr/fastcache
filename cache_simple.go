@@ -44,7 +44,7 @@ func (c *SimpleCache) SetWithExpire(key, value interface{}, expiration time.Dura
 		return err
 	}
 
-	t := c.clock.Now().Add(expiration)
+	t := time.Now().Add(expiration)
 	item.(*simpleItem).expiration = &t
 	return nil
 }
@@ -68,14 +68,13 @@ func (c *SimpleCache) set(key, value interface{}) (interface{}, error) {
 			c.evict(1)
 		}
 		item = &simpleItem{
-			clock: c.clock,
 			value: value,
 		}
 		c.items[key] = item
 	}
 
 	if c.expiration != nil {
-		t := c.clock.Now().Add(*c.expiration)
+		t := time.Now().Add(*c.expiration)
 		item.expiration = &t
 	}
 
@@ -155,7 +154,7 @@ func (c *SimpleCache) getWithLoader(key interface{}, isWait bool) (interface{}, 
 			return nil, err
 		}
 		if expiration != nil {
-			t := c.clock.Now().Add(*expiration)
+			t := time.Now().Add(*expiration)
 			item.(*simpleItem).expiration = &t
 		}
 		return v, nil
@@ -167,7 +166,7 @@ func (c *SimpleCache) getWithLoader(key interface{}, isWait bool) (interface{}, 
 }
 
 func (c *SimpleCache) evict(count int) {
-	now := c.clock.Now()
+	now := time.Now()
 	current := 0
 	for key, item := range c.items {
 		if current >= count {
@@ -289,7 +288,6 @@ func (c *SimpleCache) Purge() {
 }
 
 type simpleItem struct {
-	clock      Clock
 	value      interface{}
 	expiration *time.Time
 }
@@ -300,7 +298,7 @@ func (si *simpleItem) IsExpired(now *time.Time) bool {
 		return false
 	}
 	if now == nil {
-		t := si.clock.Now()
+		t := time.Now()
 		now = &t
 	}
 	return si.expiration.Before(*now)

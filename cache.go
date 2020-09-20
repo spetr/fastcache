@@ -30,7 +30,6 @@ type Cache interface {
 }
 
 type baseCache struct {
-	clock            Clock
 	size             int
 	loaderExpireFunc LoaderExpireFunc
 	evictedFunc      EvictedFunc
@@ -55,7 +54,6 @@ type (
 )
 
 type CacheBuilder struct {
-	clock            Clock
 	tp               string
 	size             int
 	loaderExpireFunc LoaderExpireFunc
@@ -69,15 +67,9 @@ type CacheBuilder struct {
 
 func New(size int) *CacheBuilder {
 	return &CacheBuilder{
-		clock: NewRealClock(),
-		tp:    cacheTypeSimple,
-		size:  size,
+		tp:   cacheTypeSimple,
+		size: size,
 	}
-}
-
-func (cb *CacheBuilder) Clock(clock Clock) *CacheBuilder {
-	cb.clock = clock
-	return cb
 }
 
 // Set a loader function.
@@ -173,7 +165,6 @@ func (cb *CacheBuilder) build() Cache {
 }
 
 func buildCache(c *baseCache, cb *CacheBuilder) {
-	c.clock = cb.clock
 	c.size = cb.size
 	c.loaderExpireFunc = cb.loaderExpireFunc
 	c.expiration = cb.expiration
