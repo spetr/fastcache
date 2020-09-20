@@ -15,7 +15,6 @@ type LRUCache struct {
 func newLRUCache(cb *CacheBuilder) *LRUCache {
 	c := &LRUCache{}
 	buildCache(&c.baseCache, cb)
-
 	c.init()
 	c.loadGroup.cache = c
 	return c

@@ -17,10 +17,9 @@ type ARCCache struct {
 	b2   *arcList
 }
 
-func newARC(cb *CacheBuilder) *ARCCache {
+func newARCCache(cb *CacheBuilder) *ARCCache {
 	c := &ARCCache{}
 	buildCache(&c.baseCache, cb)
-
 	c.init()
 	c.loadGroup.cache = c
 	return c
@@ -49,8 +48,7 @@ func (c *ARCCache) replace(key interface{}) {
 		old = c.t1.RemoveTail()
 		c.b1.PushFront(old)
 	}
-	item, ok := c.items[old]
-	if ok {
+	if item, ok := c.items[old]; ok {
 		delete(c.items, old)
 		if c.evictedFunc != nil {
 			c.evictedFunc(item.key, item.value)

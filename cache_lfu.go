@@ -15,7 +15,6 @@ type LFUCache struct {
 func newLFUCache(cb *CacheBuilder) *LFUCache {
 	c := &LFUCache{}
 	buildCache(&c.baseCache, cb)
-
 	c.init()
 	c.loadGroup.cache = c
 	return c

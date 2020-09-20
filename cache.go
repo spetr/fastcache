@@ -72,8 +72,7 @@ func New(size int) *CacheBuilder {
 	}
 }
 
-// Set a loader function.
-// loaderFunc: create a new value with this function if cached value is expired.
+// LoaderFunc create a new value with this function if cached value is expired.
 func (cb *CacheBuilder) LoaderFunc(loaderFunc LoaderFunc) *CacheBuilder {
 	cb.loaderExpireFunc = func(k interface{}) (interface{}, *time.Duration, error) {
 		v, err := loaderFunc(k)
@@ -82,8 +81,7 @@ func (cb *CacheBuilder) LoaderFunc(loaderFunc LoaderFunc) *CacheBuilder {
 	return cb
 }
 
-// Set a loader function with expiration.
-// loaderExpireFunc: create a new value with this function if cached value is expired.
+// LoaderExpireFunc create a new value with this function if cached value is expired.
 // If nil returned instead of time.Duration from loaderExpireFunc than value will never expire.
 func (cb *CacheBuilder) LoaderExpireFunc(loaderExpireFunc LoaderExpireFunc) *CacheBuilder {
 	cb.loaderExpireFunc = loaderExpireFunc
@@ -143,7 +141,7 @@ func (cb *CacheBuilder) Expiration(expiration time.Duration) *CacheBuilder {
 
 func (cb *CacheBuilder) Build() Cache {
 	if cb.size <= 0 && cb.tp != cacheTypeSimple {
-		panic("gcache: Cache size <= 0")
+		panic("fastcache: Cache size <= 0")
 	}
 
 	return cb.build()
@@ -158,9 +156,9 @@ func (cb *CacheBuilder) build() Cache {
 	case cacheTypeLFU:
 		return newLFUCache(cb)
 	case cacheTypeARC:
-		return newARC(cb)
+		return newARCCache(cb)
 	default:
-		panic("gcache: Unknown type " + cb.tp)
+		panic("fastcache: Unknown type " + cb.tp)
 	}
 }
 

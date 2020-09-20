@@ -13,7 +13,6 @@ type SimpleCache struct {
 func newSimpleCache(cb *CacheBuilder) *SimpleCache {
 	c := &SimpleCache{}
 	buildCache(&c.baseCache, cb)
-
 	c.init()
 	c.loadGroup.cache = c
 	return c
