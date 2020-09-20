@@ -2,6 +2,7 @@ package fastcache
 
 import (
 	"container/list"
+	"context"
 	"time"
 )
 
@@ -97,10 +98,10 @@ func (c *LFUCache) set(key, value interface{}) (interface{}, error) {
 // Get a value from cache pool using key if it exists.
 // If it dose not exists key and has LoaderFunc,
 // generate a value using `LoaderFunc` method returns value.
-func (c *LFUCache) Get(key interface{}) (interface{}, error) {
+func (c *LFUCache) Get(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
 	if err == ErrKeyNotFoundError {
-		return c.getWithLoader(key, true)
+		return c.getWithLoader(ctx, key, true)
 	}
 	return v, err
 }
@@ -108,10 +109,10 @@ func (c *LFUCache) Get(key interface{}) (interface{}, error) {
 // GetIFPresent gets a value from cache pool using key if it exists.
 // If it dose not exists key, returns ErrKeyNotFoundError.
 // And send a request which refresh value for specified key if cache object has LoaderFunc.
-func (c *LFUCache) GetIFPresent(key interface{}) (interface{}, error) {
+func (c *LFUCache) GetIFPresent(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
 	if err == ErrKeyNotFoundError {
-		return c.getWithLoader(key, false)
+		return c.getWithLoader(ctx, key, false)
 	}
 	return v, err
 }
@@ -149,11 +150,11 @@ func (c *LFUCache) getValue(key interface{}, onLoad bool) (interface{}, error) {
 	return nil, ErrKeyNotFoundError
 }
 
-func (c *LFUCache) getWithLoader(key interface{}, isWait bool) (interface{}, error) {
-	if c.loaderExpireFunc == nil {
+func (c *LFUCache) getWithLoader(ctx context.Context, key interface{}, isWait bool) (interface{}, error) {
+	if c.loaderExpireFunc == nil || ctx == nil {
 		return nil, ErrKeyNotFoundError
 	}
-	value, _, err := c.load(key, func(v interface{}, expiration *time.Duration, e error) (interface{}, error) {
+	value, _, err := c.load(ctx, key, func(v interface{}, expiration *time.Duration, e error) (interface{}, error) {
 		if e != nil {
 			return nil, e
 		}

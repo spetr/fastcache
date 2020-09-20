@@ -1,19 +1,22 @@
 package fastcache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 )
 
-func loader(key interface{}) (interface{}, error) {
+var ctx = context.Background()
+
+func loader(_ context.Context, key interface{}) (interface{}, error) {
 	return fmt.Sprintf("valueFor%s", key), nil
 }
 
 func testSetCache(t *testing.T, gc Cache, numbers int) {
 	for i := 0; i < numbers; i++ {
 		key := fmt.Sprintf("Key-%d", i)
-		value, err := loader(key)
+		value, err := loader(ctx, key)
 		if err != nil {
 			t.Error(err)
 			return
@@ -25,11 +28,11 @@ func testSetCache(t *testing.T, gc Cache, numbers int) {
 func testGetCache(t *testing.T, gc Cache, numbers int) {
 	for i := 0; i < numbers; i++ {
 		key := fmt.Sprintf("Key-%d", i)
-		v, err := gc.Get(key)
+		v, err := gc.Get(ctx, key)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		expectedV, _ := loader(key)
+		expectedV, _ := loader(ctx, key)
 		if v != expectedV {
 			t.Errorf("Expected value is %v, not %v", expectedV, v)
 		}
@@ -41,19 +44,19 @@ func testGetIFPresent(t *testing.T, evT string) {
 		New(8).
 			EvictType(evT).
 			LoaderFunc(
-				func(key interface{}) (interface{}, error) {
+				func(_ context.Context, key interface{}) (interface{}, error) {
 					return "value", nil
 				}).
 			Build()
 
-	v, err := cache.GetIFPresent("key")
+	v, err := cache.GetIFPresent(ctx, "key")
 	if err != ErrKeyNotFoundError {
 		t.Errorf("err should not be %v", err)
 	}
 
 	time.Sleep(2 * time.Millisecond)
 
-	v, err = cache.GetIFPresent("key")
+	v, err = cache.GetIFPresent(ctx, "key")
 	if err != nil {
 		t.Errorf("err should not be %v", err)
 	}

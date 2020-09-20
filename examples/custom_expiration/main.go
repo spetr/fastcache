@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -14,7 +15,7 @@ func main() {
 
 	gc.SetWithExpire("key", "ok", time.Second*3)
 
-	v, err := gc.Get("key")
+	v, err := gc.Get(context.Background(), "key")
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +24,7 @@ func main() {
 	fmt.Println("waiting 3s for value to expire:")
 	time.Sleep(time.Second * 3)
 
-	v, err = gc.Get("key")
+	v, err = gc.Get(context.Background(), "key")
 	if err != nil {
 		panic(err)
 	}

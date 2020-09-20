@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spetr/fastcache"
@@ -9,12 +10,12 @@ import (
 func main() {
 	gc := fastcache.New(10).
 		LFU().
-		LoaderFunc(func(key interface{}) (interface{}, error) {
+		LoaderFunc(func(_ context.Context, key interface{}) (interface{}, error) {
 			return fmt.Sprintf("%v-value", key), nil
 		}).
 		Build()
 
-	v, err := gc.Get("key")
+	v, err := gc.Get(context.Background(), "key")
 	if err != nil {
 		panic(err)
 	}
