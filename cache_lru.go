@@ -92,18 +92,18 @@ func (c *LRUCache) SetWithExpire(key, value interface{}, expiration time.Duratio
 // generate a value using `LoaderFunc` method returns value.
 func (c *LRUCache) Get(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, true)
 	}
 	return v, err
 }
 
 // GetIFPresent gets a value from cache pool using key if it exists.
-// If it dose not exists key, returns ErrKeyNotFoundError.
+// If it dose not exists key, returns ErrKeyNotFound.
 // And send a request which refresh value for specified key if cache object has LoaderFunc.
 func (c *LRUCache) GetIFPresent(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, false)
 	}
 	return v, err
@@ -140,12 +140,12 @@ func (c *LRUCache) getValue(key interface{}, onLoad bool) (interface{}, error) {
 	if !onLoad {
 		c.stats.IncrMissCount()
 	}
-	return nil, ErrKeyNotFoundError
+	return nil, ErrKeyNotFound
 }
 
 func (c *LRUCache) getWithLoader(ctx context.Context, key interface{}, isWait bool) (interface{}, error) {
 	if c.loaderExpireFunc == nil || ctx == nil {
-		return nil, ErrKeyNotFoundError
+		return nil, ErrKeyNotFound
 	}
 	value, _, err := c.load(ctx, key, func(v interface{}, expiration *time.Duration, e error) (interface{}, error) {
 		if e != nil {
@@ -293,6 +293,23 @@ func (c *LRUCache) Purge() {
 	}
 
 	c.init()
+}
+
+func (c *LRUCache) SetSize(size int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if size <= 0 {
+		return
+	}
+	if len(c.items) <= size {
+		c.size = size
+		return
+	}
+	diffInSize := c.size - size
+	for i := 0; i < diffInSize; i++ {
+		c.removeElement(c.evictList.Back())
+	}
+	c.size = size
 }
 
 type lruItem struct {

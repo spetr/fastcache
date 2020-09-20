@@ -100,18 +100,18 @@ func (c *LFUCache) set(key, value interface{}) (interface{}, error) {
 // generate a value using `LoaderFunc` method returns value.
 func (c *LFUCache) Get(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, true)
 	}
 	return v, err
 }
 
 // GetIFPresent gets a value from cache pool using key if it exists.
-// If it dose not exists key, returns ErrKeyNotFoundError.
+// If it dose not exists key, returns ErrKeyNotFound.
 // And send a request which refresh value for specified key if cache object has LoaderFunc.
 func (c *LFUCache) GetIFPresent(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, false)
 	}
 	return v, err
@@ -147,12 +147,12 @@ func (c *LFUCache) getValue(key interface{}, onLoad bool) (interface{}, error) {
 	if !onLoad {
 		c.stats.IncrMissCount()
 	}
-	return nil, ErrKeyNotFoundError
+	return nil, ErrKeyNotFound
 }
 
 func (c *LFUCache) getWithLoader(ctx context.Context, key interface{}, isWait bool) (interface{}, error) {
 	if c.loaderExpireFunc == nil || ctx == nil {
-		return nil, ErrKeyNotFoundError
+		return nil, ErrKeyNotFound
 	}
 	value, _, err := c.load(ctx, key, func(v interface{}, expiration *time.Duration, e error) (interface{}, error) {
 		if e != nil {
@@ -321,6 +321,9 @@ func (c *LFUCache) Purge() {
 	}
 
 	c.init()
+}
+
+func (c *LFUCache) SetSize(size int) {
 }
 
 type freqEntry struct {

@@ -56,7 +56,7 @@ func (g *Group) Do(ctx context.Context, key interface{}, fn func() (interface{},
 	if c, ok := g.m[key]; ok {
 		g.mu.Unlock()
 		if !isWait {
-			return nil, false, ErrKeyNotFoundError
+			return nil, false, ErrKeyNotFound
 		}
 		select {
 		case <-ctx.Done():
@@ -71,7 +71,7 @@ func (g *Group) Do(ctx context.Context, key interface{}, fn func() (interface{},
 	g.mu.Unlock()
 	if !isWait {
 		go g.call(c, key, fn)
-		return nil, false, ErrKeyNotFoundError
+		return nil, false, ErrKeyNotFound
 	}
 	v, err = g.call(c, key, fn)
 	return v, true, err

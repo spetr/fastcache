@@ -50,7 +50,7 @@ func testGetIFPresent(t *testing.T, evT string) {
 			Build()
 
 	v, err := cache.GetIFPresent(ctx, "key")
-	if err != ErrKeyNotFoundError {
+	if err != ErrKeyNotFound {
 		t.Errorf("err should not be %v", err)
 	}
 

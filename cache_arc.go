@@ -164,18 +164,18 @@ func (c *ARCCache) set(key, value interface{}) (interface{}, error) {
 // Get a value from cache pool using key if it exists. If not exists and it has LoaderFunc, it will generate the value using you have specified LoaderFunc method returns value.
 func (c *ARCCache) Get(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, true)
 	}
 	return v, err
 }
 
 // GetIFPresent gets a value from cache pool using key if it exists.
-// If it dose not exists key, returns ErrKeyNotFoundError.
+// If it dose not exists key, returns ErrKeyNotFound.
 // And send a request which refresh value for specified key if cache object has LoaderFunc.
 func (c *ARCCache) GetIFPresent(ctx context.Context, key interface{}) (interface{}, error) {
 	v, err := c.get(key, false)
-	if err == ErrKeyNotFoundError {
+	if err == ErrKeyNotFound {
 		return c.getWithLoader(ctx, key, false)
 	}
 	return v, err
@@ -231,12 +231,12 @@ func (c *ARCCache) getValue(key interface{}, onLoad bool) (interface{}, error) {
 	if !onLoad {
 		c.stats.IncrMissCount()
 	}
-	return nil, ErrKeyNotFoundError
+	return nil, ErrKeyNotFound
 }
 
 func (c *ARCCache) getWithLoader(ctx context.Context, key interface{}, isWait bool) (interface{}, error) {
 	if c.loaderExpireFunc == nil || ctx == nil {
-		return nil, ErrKeyNotFoundError
+		return nil, ErrKeyNotFound
 	}
 	value, _, err := c.load(ctx, key, func(v interface{}, expiration *time.Duration, e error) (interface{}, error) {
 		if e != nil {
@@ -282,6 +282,21 @@ func (c *ARCCache) Remove(key interface{}) bool {
 	defer c.mu.Unlock()
 
 	return c.remove(key)
+}
+
+func (c *ARCCache) RemoveLeastUsed() bool {
+	var key interface{}
+	c.mu.Lock()
+	if elt := c.t1.Tail(); elt != nil {
+		key = elt.Value
+	} else if elt := c.t2.Tail(); elt != nil {
+		key = elt.Value
+	}
+	c.mu.Unlock()
+	if key != nil {
+		return c.Remove(key)
+	}
+	return false
 }
 
 func (c *ARCCache) remove(key interface{}) bool {
@@ -369,6 +384,9 @@ func (c *ARCCache) Purge() {
 	c.init()
 }
 
+func (c *ARCCache) SetSize(size int) {
+}
+
 func (c *ARCCache) setPart(p int) {
 	if c.isCacheFull() {
 		c.part = p
@@ -445,6 +463,10 @@ func (al *arcList) RemoveTail() interface{} {
 	delete(al.keys, key)
 
 	return key
+}
+
+func (al *arcList) Tail() *list.Element {
+	return al.l.Back()
 }
 
 func (al *arcList) Len() int {

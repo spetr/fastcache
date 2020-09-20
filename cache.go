@@ -26,7 +26,7 @@ type Cache interface {
 	Keys(checkExpired bool) []interface{}
 	Len(checkExpired bool) int
 	Has(key interface{}) bool
-
+	SetSize(size int)
 	statsAccessor
 }
 
@@ -66,6 +66,7 @@ type CacheBuilder struct {
 	serializeFunc    SerializeFunc
 }
 
+// New returns new cache builder
 func New(size int) *CacheBuilder {
 	return &CacheBuilder{
 		tp:   cacheTypeSimple,

@@ -3,6 +3,6 @@ package fastcache
 import "errors"
 
 var (
-	// ErrKeyNotFoundError - error retirned when requested key was not found i cache
-	ErrKeyNotFoundError = errors.New("key not found")
+	// ErrKeyNotFound - error retirned when requested key was not found i cache
+	ErrKeyNotFound = errors.New("key not found")
 )

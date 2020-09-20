@@ -79,3 +79,39 @@ func TestLRUHas(t *testing.T) {
 		})
 	}
 }
+
+func TestLRUCache_SetSize(t *testing.T) {
+	gc := buildTestCache(t, cacheTypeLRU, 5)
+	for i := 0; i < 10; i++ {
+		err := gc.Set(fmt.Sprintf("Test_%d", i), i)
+		if err != nil {
+			t.Fatal("error setting in cache")
+		}
+	}
+	for i := 0; i < 10; i++ {
+		t.Run(fmt.Sprintf("Test_%d", i), func(t *testing.T) {
+			_ = gc.Set("test_11", 11)
+			if gc.Len(false) > 5 {
+				t.Fatalf("size %d is greater than expected size 5", gc.Len(false))
+			}
+			time.Sleep(time.Millisecond * 10)
+			t.Logf("current size = %d", gc.Len(false))
+
+			gc.SetSize(4)
+			_ = gc.Set("test_12", 12)
+			if gc.Len(false) > 4 {
+				t.Fatalf("size %d is greater than expected size 4", gc.Len(false))
+			}
+			t.Logf("current size = %d", gc.Len(false))
+
+			gc.SetSize(3)
+			_ = gc.Set("test_13", 13)
+			if gc.Len(false) > 3 {
+				t.Fatalf("size %d is greater than expected size 3", gc.Len(false))
+			}
+			t.Logf("current size = %d", gc.Len(false))
+			time.Sleep(time.Millisecond * 10)
+		})
+		_ = gc.Set(fmt.Sprintf("Test-%d", i), i)
+	}
+}
