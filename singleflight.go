@@ -64,7 +64,6 @@ func (g *Group) Do(ctx context.Context, key interface{}, fn func() (interface{},
 		case <-c.ready:
 			return c.val, false, c.err
 		}
-		return c.val, false, c.err
 	}
 	c := new(call)
 	c.ready = make(chan struct{})
